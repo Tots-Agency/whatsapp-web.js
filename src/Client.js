@@ -176,6 +176,7 @@ class Client extends EventEmitter {
         const INTRO_QRCODE_SELECTOR = 'div[data-ref] canvas';
 
         // Checks which selector appears first
+        console.log('Wait for need Authentication');
         const needAuthentication = await Promise.race([
             new Promise(resolve => {
                 page.waitForSelector(INTRO_IMG_SELECTOR, { timeout: this.options.authTimeoutMs })
@@ -189,8 +190,15 @@ class Client extends EventEmitter {
             })
         ]);
 
+        console.log('Next for need Authentication');
+
         // Checks if an error occurred on the first found selector. The second will be discarded and ignored by .race;
-        if (needAuthentication instanceof Error) throw needAuthentication;
+        if (needAuthentication instanceof Error){
+            console.log('Error in Need Authentication');
+            console.log(needAuthentication);
+            this.emit(Events.AUTHENTICATION_FAILURE, needAuthentication);
+            throw needAuthentication;
+        }
 
         // Scan-qrcode selector was found. Needs authentication
         if (needAuthentication) {
@@ -261,6 +269,7 @@ class Client extends EventEmitter {
             try {
                 await page.waitForSelector(INTRO_IMG_SELECTOR, { timeout: 0 });
             } catch(error) {
+                console.log(error);
                 if (
                     error.name === 'ProtocolError' && 
                     error.message && 
